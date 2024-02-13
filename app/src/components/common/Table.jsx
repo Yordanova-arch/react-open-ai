@@ -1,7 +1,6 @@
 import { useState } from "react"
+import axios from "axios"
 
-import Typography from "@mui/material/Typography"
-import Grid from "@mui/material/Grid"
 import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
@@ -11,13 +10,13 @@ import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
 import ButtonGroup from '@mui/material/ButtonGroup'
 
-
 import DvrIcon from '@mui/icons-material/Dvr'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 
-function AssistantsView() {
+function Table({ initialData, getName, deleteEndpoint, rowType }) {
   const [checked, setChecked] = useState([])
+  const [data, setData] = useState(initialData)
 
   const handleToggle = (value) => () => {
     const currentIndex = checked.indexOf(value)
@@ -31,13 +30,19 @@ function AssistantsView() {
 
     setChecked(newChecked)
   }
+  
+  const deleteData = () => {
+    axios.delete(`${import.meta.env.VITE_SERVER_URL}${deleteEndpoint}`, {
+      data: { deleteIds: checked }
+    })
+
+    setData([...data].filter(assistant => !checked.includes(assistant.id)))
+    setChecked([])
+  }
 
   return (
-    <Grid item>
-      <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }} >
-        Assistants
-      </Typography>
-      {
+    <div>
+        {
         checked.length > 0 ?
           <ButtonGroup variant="text" sx={{ mb: 4 }} aria-label="text button group">
             {
@@ -46,14 +51,14 @@ function AssistantsView() {
                   <EditIcon />
                 </Button> : null
             }
-            <Button>
+            <Button onClick={deleteData} >
               <DeleteIcon />
             </Button>
           </ButtonGroup> : null
       }
 
       <List dense sx={{ width: '100%', backgroundColor: "#f9f9f9", p: 5 }}>
-        {[0, 1, 2, 3].map((value, index) => {
+        {data.map((value, index) => {
           return (
             <ListItem
               sx={{ mb: 2 }}
@@ -61,25 +66,25 @@ function AssistantsView() {
               secondaryAction={
                 <Checkbox
                   edge="end"
-                  onChange={handleToggle(index)}
-                  checked={checked.indexOf(index) !== -1}
+                  onChange={handleToggle(value.id)}
+                  checked={checked.indexOf(value.id) !== -1}
                 />
               }
               disablePadding
             >
 
-              <ListItemButton sx={{ p: 1 }} onClick={handleToggle(index)}>
+              <ListItemButton sx={{ p: 1 }} onClick={handleToggle(value.id)}>
                 <ListItemIcon>
                   <DvrIcon />
                 </ListItemIcon>
-                <ListItemText primary={`Line item ${index + 1}`} />
+                <ListItemText primary={`${rowType} ${getName(value)}`} />
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
-    </Grid>
+    </div>
   )
 }
 
-export default AssistantsView
+export default Table
